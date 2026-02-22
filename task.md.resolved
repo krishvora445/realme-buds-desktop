@@ -1,0 +1,30 @@
+# Realme Buds Desktop — Project Initialization
+
+## Phase 1: Protocol Discovery (Completed)
+- [x] Guide user through Bluetooth HCI snoop log capture on Android
+- [x] Analyze captured `.log` file in Wireshark to identify GATT UUIDs and hex commands
+- [x] Document discovered protocol (service UUID, characteristic UUID, command bytes for each ANC mode)
+- [x] **SUCCESS:** Discovered the proprietary RMV Classic SPP Protocol with HMAC Authentication by decompiling the Realme Link APK.
+
+## Phase 2: Project Scaffolding
+- [ ] Initialize Electron + Vite project in workspace directory
+- [ ] Set up project structure (main process, renderer, preload)
+- [ ] Install dependencies (Web Bluetooth / noble for BLE)
+
+## Phase 3: BLE Communication Layer
+- [ ] Implement device scanning and connection logic
+- [ ] Implement GATT service/characteristic discovery
+- [ ] Implement ANC mode command sender (Normal, ANC, Transparent)
+- [ ] Handle connection state and error recovery
+
+## Phase 4: Desktop UI
+- [ ] Design and build main window (device status, mode selector)
+- [ ] Implement real-time connection status indicators
+- [ ] Add ANC mode toggle buttons with visual feedback
+- [ ] Battery level display (if discoverable from protocol)
+
+## Phase 5: Polish & Packaging
+- [ ] System tray integration for quick mode switching
+- [ ] Auto-reconnect on app startup
+- [ ] Build Windows installer (electron-builder)
+- [ ] Write README with setup instructions

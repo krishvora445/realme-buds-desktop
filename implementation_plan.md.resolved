@@ -1,0 +1,214 @@
+# Realme Buds Desktop — Implementation Plan
+
+A desktop application to control **Realme Buds T310** ANC modes (Noise Canceling, Transparent, **Normal**) from Windows, solving the problem that "Normal" mode is locked behind the mobile-only Realme Link app.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Phase 1 (Protocol Discovery) requires your hands-on work** before any code can be written. You need to capture Bluetooth traffic from your Android phone while using the Realme Link app. Without the discovered hex commands, the app cannot send the right bytes to your earbuds.
+
+> [!WARNING]
+> **Technology Choice Decision Needed**: I'm recommending **Electron** for the desktop shell because it has mature Web Bluetooth support and a large ecosystem. An alternative is **Tauri** (Rust-based, smaller binary) with `tauri-plugin-blec`. Electron is easier to get started with; Tauri produces a ~5MB app vs Electron's ~80MB. **Which do you prefer?**
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph LR
+    A[Electron App] --> B[Main Process]
+    A --> C[Renderer / UI]
+    B --> D[BLE Module]
+    D --> E[Scan & Connect]
+    D --> F[Send ANC Commands]
+    D --> G[Read Battery / Status]
+    C --> H[Mode Selector UI]
+    C --> I[Connection Status]
+    C --> J[System Tray]
+```
+
+---
+
+## Phase 1: Protocol Discovery (User-Driven)
+
+This is the **critical prerequisite**. You need to sniff the Bluetooth traffic to find the exact GATT characteristic UUID and hex command bytes.
+
+### Step-by-Step Guide
+
+| # | Action | Details |
+|---|--------|---------|
+| 1 | **Enable Developer Options** | On your Android phone, go to *Settings → About Phone → tap Build Number 7 times* |
+| 2 | **Enable BT HCI Snoop Log** | *Developer Options → Enable Bluetooth HCI snoop log* |
+| 3 | **Pair & Connect T310** | Open Realme Link app, connect earbuds |
+| 4 | **Toggle ANC modes** | Switch through: **ANC → Transparent → Normal → ANC** (do it 3-4 times in a clear pattern) |
+| 5 | **Disable snoop log** | Turn off Bluetooth, disable the snoop log |
+| 6 | **Extract the log** | Pull the log file from the phone. Location varies by brand: |
+|   | | • Most phones: `/sdcard/btsnoop_hci.log` |
+|   | | • Samsung: Generate bug report → extract `.zip` → find `btsnoop_hci.log` |
+|   | | • Realme/OPPO: `/data/misc/bluetooth/logs/btsnoop_hci.log` (may need `adb root`) |
+| 7 | **Analyze in Wireshark** | Open in [Wireshark](https://www.wireshark.org/), filter by earbud MAC address, look for `ATT Write Request` packets |
+
+### What to Look For in Wireshark
+
+- Filter: `btatt.opcode == 0x12` (Write Request) or `btatt.opcode == 0x52` (Write Command)
+- Look for a **GATT Characteristic Handle** that receives different payloads when you switch modes
+- Expected pattern: payloads that are mostly identical but differ by **1-2 bytes** for each mode
+
+### Alternative: APK Decompilation
+
+If sniffing is difficult, you can also decompile the Realme Link APK:
+1. Download the APK from APKMirror
+2. Use `jadx` to decompile
+3. Search for BLE-related classes — look for `BluetoothGattCharacteristic.setValue()` calls
+4. Find the UUID constants and command byte arrays
+
+---
+
+## Phase 2: Project Scaffolding
+
+### [NEW] Project Root Files
+
+#### [NEW] [package.json](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/package.json)
+
+Standard Electron + Vite project with these key dependencies:
+- `electron` — desktop shell
+- `vite` — build tooling  
+- `@anthropic-ai/sdk` — (not needed, placeholder)
+- `noble` or `@electron/bluetooth` — BLE communication from Node.js main process
+
+#### [NEW] [vite.config.js](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/vite.config.js)
+
+Vite config for renderer process (HTML/CSS/JS).
+
+---
+
+### [NEW] Main Process (`src/main/`)
+
+#### [NEW] [main.js](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/main/main.js)
+
+- Create BrowserWindow with Web Bluetooth permissions
+- Register IPC handlers for BLE operations
+- System tray setup
+
+#### [NEW] [preload.js](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/main/preload.js)
+
+- Expose safe IPC bridge to renderer (`contextBridge.exposeInMainWorld`)
+
+#### [NEW] [ble.js](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/main/ble.js)
+
+Core BLE communication module:
+- `scanForDevice(name)` — scan for "realme Buds T310"
+- `connect(macAddress)` — establish BLE connection
+- `discoverServices()` — enumerate GATT services
+- `sendCommand(characteristicUUID, bytes)` — write command bytes
+- `setANCMode(mode)` — high-level: sends the correct hex payload for `"anc"`, `"transparent"`, or `"normal"`
+- `getBatteryLevel()` — reads battery characteristic (standard BLE UUID `0x2A19`)
+- `disconnect()` — clean disconnect
+
+---
+
+### [NEW] Renderer (`src/renderer/`)
+
+#### [NEW] [index.html](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/renderer/index.html)
+
+Main app window markup.
+
+#### [NEW] [index.css](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/renderer/index.css)
+
+Dark theme styling with:
+- Glassmorphism card for the main control panel
+- Animated mode toggle buttons (ANC/Transparent/Normal)
+- Pulsing connection indicator
+- Realme's signature yellow accent (`#F5C518`)
+
+#### [NEW] [app.js](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/renderer/app.js)
+
+UI logic:
+- Device connection flow
+- Mode switching with visual feedback
+- Battery display updates
+- Error state handling
+
+---
+
+## Phase 3: Configuration & Protocol File
+
+#### [NEW] [src/protocol/realme-t310.json](file:///c:/Users/Admin/Documents/pc_doc/realme-buds-desktop/realme-buds-desktop/src/protocol/realme-t310.json)
+
+Stores the discovered protocol data — this gets populated after Phase 1:
+
+```json
+{
+  "device_name": "realme Buds T310",
+  "service_uuid": "TO_BE_DISCOVERED",
+  "characteristic_uuid": "TO_BE_DISCOVERED",
+  "commands": {
+    "noise_canceling": "TO_BE_DISCOVERED",
+    "transparent": "TO_BE_DISCOVERED",
+    "normal": "TO_BE_DISCOVERED"
+  },
+  "handshake": null
+}
+```
+
+This separation means **adding support for other Realme earbuds later** just requires adding a new JSON file.
+
+---
+
+## Phase 4: System Tray & Auto-Connect
+
+- Minimize to system tray with context menu for quick mode switching
+- Auto-connect to last known device on app startup
+- Keyboard shortcuts for mode switching
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+Since this project involves hardware (Bluetooth earbuds), automated testing is limited to unit-testing the protocol layer:
+
+```bash
+# Run unit tests for command building / protocol parsing
+npm test
+```
+
+Tests will cover:
+- Protocol JSON loading and validation
+- Command byte construction
+- IPC message formatting
+
+### Manual Verification (User Required)
+
+> [!IMPORTANT]
+> Hardware testing requires the actual earbuds. I cannot verify BLE communication without them.
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|----------------|
+| 1 | **App launches** | Run `npm run dev` | Electron window opens with dark UI |
+| 2 | **Device scan** | Click "Scan" button | T310 appears in device list |
+| 3 | **Connect** | Click on T310 in list | Status shows "Connected", battery level appears |
+| 4 | **Switch to Normal** | Click "Normal" button | Earbuds switch to Normal mode (no ANC, no transparency) |
+| 5 | **Switch to ANC** | Click "ANC" button | Earbuds activate noise canceling |
+| 6 | **Switch to Transparent** | Click "Transparent" button | Earbuds activate transparency mode |
+| 7 | **System tray** | Minimize app | Tray icon appears, right-click shows mode options |
+| 8 | **Reconnect** | Restart app with earbuds on | Auto-connects to T310 |
+
+### Python Bleak Quick-Test Script (For Protocol Discovery Phase)
+
+Before building the full Electron app, we'll create a simple Python script to quickly validate discovered commands:
+
+```bash
+# Install bleak
+pip install bleak
+
+# Run the test script
+python scripts/test_connection.py
+```
+
+This script will:
+1. Scan for the T310
+2. Connect and list all GATT services/characteristics  
+3. Try sending the discovered command bytes
+4. Report which mode the earbuds switched to
