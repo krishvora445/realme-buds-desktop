@@ -2,6 +2,7 @@
 
 <div align="center">
 
+[![Powered by REA](https://img.shields.io/badge/Powered%20by-REA%20(Reverse%20Engineer%20Anything)-5c4ee5?style=flat-square&logo=github&logoColor=white)](https://github.com/morluto/rea)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2011%20%2F%2010-0078D6?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![Reverse Engineering](https://img.shields.io/badge/Reverse%20Engineering-OPOv1%20Protocol-8A2BE2?style=flat-square)](https://github.com/krishvora445/realme-buds-desktop)
@@ -22,7 +23,7 @@
 
 ## 💡 The Real Story & Why We Built This
 
-This project was born out of everyday hardware frustration:
+This project was born out of everyday hardware friction:
 
 1. **The 2-Device Multipoint Limit**:  
    The Realme Buds T310 only support dual-device connection (2 devices at a time). If you actively use them between two desktop/laptop computers or a PC and a tablet, you **cannot connect a 3rd device (your smartphone)** without disconnecting one of your primary work machines. Having to disconnect a computer just to open the mobile app to adjust a setting is completely counterproductive.
@@ -40,11 +41,24 @@ Instead of compromising on multi-device workflows or repeatedly tapping earbuds 
 
 ---
 
-## 🔬 How We Solved It (Reverse Engineering with REA)
+## ⚡ Supercharged by REA (Reverse Engineer Anything)
+
+A huge shoutout to **[morluto/rea](https://github.com/morluto/rea)** (*Reverse Engineer Anything*) — the trending MCP framework connecting AI coding agents directly to reverse-engineering tools, decompilers, and binary analyzers.
+
+When dissecting massive companion APKs (`com.realme.link` with over 40 split DEX files), finding vendor-specific Bluetooth communication code manually can take weeks. **REA** allowed AI agents to:
+- Trace through classes across multiple DEX containers simultaneously.
+- Map custom Bluetooth RFCOMM UUIDs (`0000079A-D102-11E1-9B23-00025B00A5A5`).
+- Extract the exact `OPOv1` protocol framing and identify the required 2-step `HELLO` + `REGISTER` handshake token.
+
+REA turned what could have been a multi-week dead end into a working solution within hours!
+
+---
+
+## 🔬 How We Solved It (The Protocol Discovery)
 
 Early attempts using raw `RMV` (`52 4D 56`) packets over standard RFCOMM sockets resulted in dropped connections and zero response from the earbuds.
 
-To uncover why, we leveraged AI-assisted reverse-engineering workflows and investigated the decompiled Android companion APK (`com.realme.link`) alongside **[morluto/rea](https://github.com/morluto/rea)** (Reverse Engineer Anything):
+Investigation of the companion stack revealed:
 
 1. **Protocol Identification**:
    - The earbuds do not use raw generic SPP. They implement the BBK/Oppo **OPOv1 proprietary framing protocol** starting with magic byte `0xAA`.
