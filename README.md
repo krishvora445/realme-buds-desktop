@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 **Native Windows desktop control and protocol reverse engineering for Realme Buds T310 wireless earbuds.**  
-*Switch between Active Noise Cancellation, Transparency, and Normal (ANC Off) modes directly from your PC without touching your phone.*
+*Switch between Active Noise Cancellation, Transparency, and Normal (ANC Off) modes directly from your PC without touching your phone or breaking your dual-device connection.*
 
 <br/>
 
@@ -20,12 +20,20 @@
 
 ---
 
-## 💡 The Story & Why We Built This
+## 💡 The Real Story & Why We Built This
 
-If you connect the **Realme Buds T310** to a Windows PC or Mac, you can listen to audio normally, but you lose granular hardware control. 
-Crucially, Realme locked **"Normal Mode"** (both ANC Off and Transparency Off) strictly behind their mobile companion app (*realme Link*), preventing desktop users from toggling it via earbud gestures.
+This project was born out of everyday hardware frustration:
 
-Instead of keeping a smartphone tethered just to toggle earbud modes while working, we reverse-engineered the communication channel between the companion app and the earbuds. This project delivers a standalone, elegant Windows 11 desktop app and CLI to control your earbuds natively.
+1. **The 2-Device Multipoint Limit**:  
+   The Realme Buds T310 only support dual-device connection (2 devices at a time). If you actively use them between two desktop/laptop computers or a PC and a tablet, you **cannot connect a 3rd device (your smartphone)** without disconnecting one of your primary work machines. Having to disconnect a computer just to open the mobile app to adjust a setting is completely counterproductive.
+
+2. **Avoiding the Annoying Tap Cycle Loop**:  
+   Physical on-ear touch gestures force you into a sequential loop: `ANC ➔ Transparency ➔ Normal ➔ ANC`. Every tap interrupts your audio with audio voice prompts, and if you overshoot the mode you want, you have to cycle all the way through again. 
+
+3. **Restoring "Normal Mode" Directly**:  
+   Realme locked direct toggle access to "Normal Mode" (ANC Off and Transparency Off) behind their mobile app.
+
+Instead of compromising on multi-device workflows or repeatedly tapping earbuds to cycle through modes, we reverse-engineered the communication channel between the companion app and the earbuds. This project delivers a standalone, elegant Windows 11 desktop app and CLI to control your earbuds natively with a single click.
 
 > ### 🛡️ Responsible Interoperability Notice
 > This project is **not** a hack, exploit, vulnerability, or DRM bypass. It does not tamper with firmware, crack encryption, or access cloud endpoints. It is an **interoperability research project** that recreates standard local Bluetooth RFCOMM control packets so users can manage hardware they already own from their desktop operating system.
@@ -56,6 +64,8 @@ To uncover why, we leveraged AI-assisted reverse-engineering workflows and inves
 
 ## ✨ Features
 
+- **Direct Mode Selection**: Jump directly to Noise Canceling, Transparency, or Normal (Off) in 1 click—no sequential cycling.
+- **Preserves Dual-Device Connectivity**: Keep your earbuds connected to your 2 work machines without needing a phone in the loop.
 - **Windows 11 Fluent UI**: Dark mode card-based interface with accent colors for each active mode.
 - **System Tray Integration**: Lives unobtrusively in your notification area next to the clock and Quick Settings with right-click quick toggles.
 - **Non-Blocking Architecture**: Bluetooth connections and WinRT RFCOMM socket streaming run on background worker threads—your UI never lags or hangs.
