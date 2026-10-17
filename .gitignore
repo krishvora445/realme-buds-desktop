@@ -1,8 +1,15 @@
 # Project Specific Ignores
 realme_link_decompiled_headset/
 *.apk
+*.apkm
 btsnoop_hci.log
 *.log
+
+# Cloned reference repositories
+rea/
+cracked-oneplus-buds/
+realme-web-control/
+windhawk_sample.cpp
 
 # Python
 __pycache__/

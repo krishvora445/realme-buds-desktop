@@ -1,0 +1,6 @@
+winsdk>=1.0.0b10
+customtkinter>=6.0.0
+pystray>=0.19.5
+Pillow>=10.0.0
+darkdetect>=0.8.0
+pywin32>=306
